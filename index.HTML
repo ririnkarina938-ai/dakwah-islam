@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peta Petualangan Dakwah - Kelas 6 SD</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome untuk Ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Quicksand untuk kesan anak-anak yang modern -->
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Quicksand', 'sans-serif'],
+                    },
+                    colors: {
+                        'sky-pastel': '#E0F2FE', // Sky 100
+                        'sky-dark': '#0284c7', // Sky 600
+                        'cloud-white': '#F0F9FF',
+                        'adventure-yellow': '#FDE047', // Yellow 300
+                        'adventure-orange': '#F97316', // Orange 500
+                    },
+                    animation: {
+                        'float': 'float 4s ease-in-out infinite',
+                        'float-reverse': 'floatReverse 5s ease-in-out infinite',
+                        'bounce-slow': 'bounce 3s infinite',
+                        'wiggle': 'wiggle 1s ease-in-out infinite',
+                        'drift': 'drift 20s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' },
+                        },
+                        floatReverse: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(15px)' },
+                        },
+                        wiggle: {
+                            '0%, 100%': { transform: 'rotate(-3deg)' },
+                            '50%': { transform: 'rotate(3deg)' },
+                        },
+                        drift: {
+                            '0%': { transform: 'translateX(-10%)' },
+                            '50%': { transform: 'translateX(10%)' },
+                            '100%': { transform: 'translateX(-10%)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #F0F9FF; /* Sky Blue Base */
+            overflow-x: hidden;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #E0F2FE;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #38BDF8;
+            border-radius: 4px;
+        }
+
+        .island-locked {
+            filter: grayscale(100%);
+            opacity: 0.8;
+            cursor: not-allowed;
+            background-color: #E5E7EB;
+        }
+
+        .scrolly-section {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .scrolly-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Cloud Shapes */
+        .cloud-shape {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            opacity: 0.6;
+            z-index: 0;
+        }
+        
+        .character-img {
+            filter: drop-shadow(0 10px 8px rgb(0 0 0 / 0.1));
+        }
+    </style>
+</head>
+<body class="text-slate-800 font-sans h-screen flex flex-col bg-sky-50 relative">
+
+    <!-- DATA STATE MANAGEMENT -->
+    <script>
+        // Data Wali Songo
+        const waliSongoData = [
+            { name: "Sunan Gresik", realName: "Maulana Malik Ibrahim", area: "Gresik", icon: "fa-user" },
+            { name: "Sunan Ampel", realName: "Raden Rahmat", area: "Surabaya", icon: "fa-user-graduate" },
+            { name: "Sunan Bonang", realName: "Makhdum Ibrahim", area: "Tuban", icon: "fa-music" },
+            { name: "Sunan Drajat", realName: "Raden Qasim", area: "Lamongan", icon: "fa-hand-holding-heart" },
+            { name: "Sunan Kudus", realName: "Ja'far Shadiq", area: "Kudus", icon: "fa-mosque" },
+            { name: "Sunan Giri", realName: "Raden Paku", area: "Gresik", icon: "fa-mountain" },
+            { name: "Sunan Kalijaga", realName: "Raden Said", area: "Demak", icon: "fa-masks-theater" },
+            { name: "Sunan Muria", realName: "Raden Umar Said", area: "Gunung Muria", icon: "fa-leaf" },
+            { name: "Sunan Gunung Jati", realName: "Syarif Hidayatullah", area: "Cirebon", icon: "fa-crown" },
+        ];
+
+        let gameState = {
+            xp: 0,
+            level: 1,
+            maxLevel: 5,
+            currentView: 'home',
+            isTeacherMode: false,
+            levelsData: [
+                { id: 1, title: "Kisah Wali Songo", type: "materi", status: "unlocked", videoId: "https://www.youtube.com/embed/dbxK0s6p5W0", icon: "fa-mosque" }, // Contoh ID Video
+                { id: 2, title: "Adab Bicara", type: "materi", status: "locked", videoId: "", icon: "fa-comments" },
+                { id: 3, title: "Kuis Wali", type: "quiz", status: "locked", videoId: null, icon: "fa-question-circle" },
+                { id: 4, title: "Vlog Dakwah", type: "upload", status: "locked", videoId: null, icon: "fa-video" },
+                { id: 5, title: "Dai Cilik", type: "final", status: "locked", videoId: null, icon: "fa-crown" }
+            ]
+        };
+    </script>
+
+    <!-- TOP BAR (HUD) -->
+    <nav id="navbar" class="hidden bg-white/90 backdrop-blur-sm shadow-md p-4 sticky top-0 z-50 border-b-4 border-sky-200">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="navigate('home')">
+                <div class="bg-sky-100 p-2 rounded-full border border-sky-300">
+                    <i class="fa-solid fa-cloud-moon text-sky-600 text-xl"></i>
+                </div>
+                <span class="font-bold text-sky-700 hidden md:block">Dakwah Adventure</span>
+            </div>
+            
+            <div class="flex items-center space-x-4 bg-sky-50 px-4 py-2 rounded-full border border-sky-200 shadow-sm">
+                <div class="flex flex-col items-end">
+                    <span class="text-xs font-bold text-sky-600">Level <span id="display-level">1</span></span>
+                    <div class="w-32 h-2 bg-gray-200 rounded-full mt-1 overflow-hidden">
+                        <div id="xp-bar" class="h-full bg-gradient-to-r from-yellow-300 to-orange-400 rounded-full transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-yellow-400 to-orange-500 text-white font-bold rounded-full w-10 h-10 flex items-center justify-center shadow-md border-2 border-white">
+                    <span id="display-xp">0</span>
+                </div>
+            </div>
+
+            <button onclick="toggleTeacherMode()" class="text-xs text-slate-400 hover:text-sky-600 font-semibold bg-white px-2 py-1 rounded border">
+                <i class="fa-solid fa-user-tie"></i> Guru
+            </button>
+        </div>
+    </nav>
+
+    <!-- BACKGROUND DECORATIONS (CLOUDS) -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="cloud-shape w-64 h-24 top-10 -left-10 animate-drift"></div>
+        <div class="cloud-shape w-96 h-32 top-40 -right-20 animate-drift" style="animation-delay: -10s;"></div>
+        <i class="fa-solid fa-cloud text-white text-9xl absolute top-20 left-10 opacity-40 animate-float"></i>
+        <i class="fa-solid fa-cloud text-white text-8xl absolute bottom-20 right-10 opacity-40 animate-float-delayed"></i>
+        <i class="fa-solid fa-sun text-yellow-300 text-7xl absolute top-10 right-20 opacity-80 animate-spin-slow" style="animation-duration: 20s;"></i>
+    </div>
+
+    <!-- MAIN APP -->
+    <main id="app-container" class="flex-grow relative overflow-y-auto z-10">
+        
+        <!-- 1. LANDING PAGE -->
+        <section id="view-home" class="min-h-full flex flex-col items-center justify-center p-6 text-center relative">
+            
+            <!-- Karakter Muslim & Muslimah -->
+            <div class="absolute bottom-0 left-4 md:left-20 w-32 md:w-48 animate-float-reverse hidden md:block">
+                <!-- Avatar Muslim -->
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmad&clothing=collarAndSweater&top=shortHair" alt="Muslim Boy" class="character-img w-full hover:scale-110 transition">
+            </div>
+            <div class="absolute bottom-0 right-4 md:right-20 w-32 md:w-48 animate-float hidden md:block">
+                <!-- Avatar Muslimah -->
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aisyah&clothing=overall&top=hijab&accessories=glasses" alt="Muslim Girl" class="character-img w-full hover:scale-110 transition">
+            </div>
+
+            <div class="mb-8 relative z-10">
+                <div class="w-56 h-56 bg-white rounded-full flex items-center justify-center border-8 border-sky-200 shadow-2xl relative animate-bounce-slow">
+                    <i class="fa-solid fa-mosque text-7xl text-sky-500"></i>
+                    <i class="fa-solid fa-star text-yellow-400 absolute -top-4 -right-4 text-5xl animate-spin" style="animation-duration: 5s;"></i>
+                </div>
+            </div>
+            
+            <h1 class="text-4xl md:text-6xl font-bold text-sky-800 mb-4 drop-shadow-sm" style="font-family: 'Quicksand', sans-serif;">Petualangan Dakwah</h1>
+            <p class="text-xl text-slate-600 mb-8 max-w-md bg-white/70 p-4 rounded-xl shadow-sm backdrop-blur-sm">
+                Ayo berpetualang mengenal Wali Songo dan menjadi Dai Cilik yang hebat!
+            </p>
+            
+            <button onclick="navigate('map')" class="bg-gradient-to-r from-sky-400 to-blue-600 hover:from-sky-500 hover:to-blue-700 text-white font-bold py-4 px-12 rounded-full shadow-xl transform transition hover:scale-110 border-b-4 border-blue-800 z-20">
+                <i class="fa-solid fa-paper-plane mb-1 mr-2"></i> Mulai Petualangan
+            </button>
+        </section>
+
+        <!-- 2. MAP PAGE -->
+        <section id="view-map" class="hidden min-h-full p-8 relative">
+            <div class="max-w-5xl mx-auto relative min-h-[700px]">
+                <div class="text-center mb-12">
+                    <span class="bg-white/90 text-sky-800 px-8 py-3 rounded-full shadow-lg font-bold text-2xl border-2 border-sky-100 backdrop-blur">
+                        <i class="fa-solid fa-map text-yellow-500 mr-2"></i> Peta Pulau Ilmu
+                    </span>
+                </div>
+                
+                <!-- Jalur Peta SVG -->
+                <svg class="absolute top-20 left-0 w-full h-full pointer-events-none z-0 hidden md:block opacity-30">
+                    <path d="M200,100 C350,100 400,300 500,200 S700,500 800,400" stroke="#0EA5E9" stroke-width="8" fill="none" stroke-dasharray="20,20" stroke-linecap="round"/>
+                </svg>
+
+                <!-- Karakter Hiasan di Peta -->
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Umar&top=turban" class="absolute top-40 left-10 w-24 animate-float opacity-80" alt="Character">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Fatima&top=hijab&clothesColor=pink" class="absolute bottom-40 right-10 w-24 animate-float-reverse opacity-80" alt="Character">
+
+                <div id="map-nodes" class="grid grid-cols-1 md:grid-cols-3 gap-16 relative z-10 mt-8">
+                    <!-- Nodes injected via JS -->
+                </div>
+            </div>
+            
+            <!-- Notifikasi Guru -->
+            <div id="teacher-alert" class="hidden fixed bottom-4 right-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 px-4 py-3 rounded shadow-lg relative z-50">
+                <strong class="font-bold"><i class="fa-solid fa-pen-to-square"></i> Mode Guru</strong>
+                <span class="block text-sm">Klik ikon pensil untuk edit materi.</span>
+            </div>
+        </section>
+
+        <!-- 3. CONTENT MODULE (Materi Lengkap) -->
+        <section id="view-content" class="hidden min-h-full bg-white relative z-20">
+            <!-- Header Sticky -->
+            <div class="bg-sky-600 text-white p-4 sticky top-0 z-30 shadow-md flex items-center justify-between">
+                <button onclick="navigate('map')" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition">
+                    <i class="fa-solid fa-arrow-left"></i> Kembali
+                </button>
+                <h2 id="content-title" class="text-xl font-bold truncate mx-4">Materi</h2>
+                <div class="w-20"></div> <!-- Spacer -->
+            </div>
+
+            <div class="max-w-4xl mx-auto p-6">
+                <!-- Video Player Asli -->
+                <div class="bg-slate-900 rounded-2xl shadow-2xl mb-10 overflow-hidden border-4 border-slate-200">
+                    <div class="aspect-video relative">
+                        <iframe id="youtube-frame" class="w-full h-full" src="" title="Video Pembelajaran" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                    <div class="p-4 bg-slate-800 text-white flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-lg"><i class="fa-brands fa-youtube text-red-500 mr-2"></i>Video Pembelajaran</h3>
+                            <p class="text-slate-400 text-xs mt-1">Simak video ini sampai selesai ya!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Konten Scrollytelling -->
+                <div class="space-y-16 pb-20">
+                    
+                    <!-- Intro -->
+                    <div class="scrolly-section bg-sky-50 p-8 rounded-2xl shadow-md border-l-8 border-sky-400">
+                        <h3 class="font-bold text-2xl mb-4 text-sky-800">Apa itu Wali Songo?</h3>
+                        <p class="text-lg leading-relaxed text-slate-700">
+                            Wali Songo artinya Sembilan Wali. Mereka adalah ulama yang menyebarkan Islam di tanah Jawa. Mereka berdakwah dengan cara yang <b>damai</b>, <b>santun</b>, dan <b>menghargai budaya</b>. Tidak ada paksaan, sehingga Islam diterima dengan hati gembira.
+                        </p>
+                    </div>
+
+                    <!-- GALERI 9 WALI (Fitur Baru) -->
+                    <div class="scrolly-section">
+                        <h3 class="text-center font-bold text-3xl text-sky-800 mb-8 underline decoration-yellow-400 decoration-4">Kenali 9 Wali Songo</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- JS akan mengisi ini -->
+                            <script>
+                                // Helper untuk render grid wali (dijalankan nanti)
+                            </script>
+                            <!-- Hardcoded for simplicity in single file -->
+                            <div id="wali-grid" class="contents">
+                                <!-- Grid Items will be injected -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kesimpulan & Action -->
+                    <div class="text-center scrolly-section bg-yellow-50 p-10 rounded-3xl border-2 border-yellow-200 shadow-xl">
+                        <i class="fa-solid fa-star text-5xl text-yellow-400 mb-4 animate-spin-slow"></i>
+                        <h3 class="font-bold text-2xl text-slate-800 mb-2">Hebat! Kamu sudah belajar.</h3>
+                        <p class="mb-6 text-slate-600">Jadilah seperti Wali Songo yang menyebar kebaikan dengan senyuman.</p>
+                        <button onclick="finishModule()" class="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-10 rounded-full shadow-lg transform transition hover:scale-105 border-b-4 border-green-700">
+                            <i class="fa-solid fa-check-circle mr-2"></i> Ambil Hadiah XP!
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. UPLOAD PAGE -->
+        <section id="view-upload" class="hidden min-h-full p-8 flex flex-col items-center justify-center relative">
+            <button onclick="navigate('map')" class="absolute top-20 left-6 md:top-6 bg-white text-sky-600 px-4 py-2 rounded-full shadow font-bold z-30"><i class="fa-solid fa-arrow-left"></i> Peta</button>
+            
+            <div class="bg-white p-8 rounded-3xl shadow-xl max-w-2xl w-full text-center border-4 border-dashed border-sky-300 relative mt-10">
+                <div class="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-sky-400 to-blue-500 text-white p-4 rounded-full shadow-lg border-4 border-white">
+                    <i class="fa-solid fa-video text-3xl"></i>
+                </div>
+                
+                <h2 class="text-3xl font-bold text-sky-800 mt-8 mb-2">Vlog Dakwah Cilik</h2>
+                <p class="text-slate-500 mb-6">Buat video singkat (1 menit) meniru gaya Sunan Kalijaga berdakwah lewat cerita/lagu!</p>
+                
+                <div class="bg-sky-50 p-6 rounded-xl border border-sky-100 mb-6">
+                    <h4 class="font-bold text-sky-700 mb-2 text-left"><i class="fa-solid fa-list-check"></i> Tips Video Bagus:</h4>
+                    <ul class="text-left text-sm text-slate-600 space-y-2">
+                        <li>1. Ucapkan salam dengan ceria.</li>
+                        <li>2. Gunakan bahasa yang sopan.</li>
+                        <li>3. Berikan senyuman terbaikmu!</li>
+                    </ul>
+                </div>
+
+                <button onclick="submitUpload()" class="w-full bg-adventure-yellow hover:bg-yellow-400 text-orange-900 font-bold py-4 rounded-xl shadow-md transition transform active:scale-95">
+                    <i class="fa-solid fa-cloud-arrow-up mr-2"></i> Upload Video
+                </button>
+            </div>
+        </section>
+
+        <!-- 5. QUIZ PAGE -->
+        <section id="view-quiz" class="hidden min-h-full p-8 flex flex-col items-center justify-center relative">
+            <button onclick="navigate('map')" class="absolute top-20 left-6 md:top-6 bg-white text-sky-600 px-4 py-2 rounded-full shadow font-bold z-30"><i class="fa-solid fa-arrow-left"></i> Peta</button>
+
+            <div class="bg-white p-8 rounded-3xl shadow-xl max-w-lg w-full border-b-8 border-sky-200 mt-10">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-sky-800">Kuis Pengetahuan</h2>
+                    <span class="bg-sky-100 text-sky-700 font-bold text-xs px-3 py-1 rounded-full">Soal 1/1</span>
+                </div>
+                
+                <!-- Soal -->
+                <div class="mb-8">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Teacher&top=hat" class="w-20 mx-auto mb-4" alt="Guru">
+                    <p class="text-xl font-bold text-center text-slate-700">"Siapakah Wali Songo yang berdakwah menggunakan media Wayang Kulit?"</p>
+                </div>
+                
+                <div class="space-y-3">
+                    <button onclick="answerQuiz(false)" class="w-full text-left p-4 border-2 border-slate-100 rounded-xl hover:bg-red-50 hover:border-red-300 transition font-semibold text-slate-600">
+                        A. Sunan Ampel
+                    </button>
+                    <button onclick="answerQuiz(true)" class="w-full text-left p-4 border-2 border-slate-100 rounded-xl hover:bg-green-50 hover:border-green-400 transition font-semibold text-slate-600">
+                        B. Sunan Kalijaga
+                    </button>
+                    <button onclick="answerQuiz(false)" class="w-full text-left p-4 border-2 border-slate-100 rounded-xl hover:bg-red-50 hover:border-red-300 transition font-semibold text-slate-600">
+                        C. Sunan Gresik
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- Init Logic ---
+        document.addEventListener('DOMContentLoaded', () => {
+            renderWaliGrid();
+        });
+
+        // --- Navigation Logic ---
+        function navigate(viewId) {
+            // Hide all views
+            ['home', 'map', 'content', 'upload', 'quiz'].forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+            });
+            
+            // Show selected view
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+            
+            // Toggle Navbar
+            const navbar = document.getElementById('navbar');
+            if(viewId === 'home') {
+                navbar.classList.add('hidden');
+            } else {
+                navbar.classList.remove('hidden');
+                updateHUD();
+                if(viewId === 'map') renderMap();
+            }
+
+            gameState.currentView = viewId;
+            window.scrollTo(0,0);
+        }
+
+        // --- Render Wali Songo Grid ---
+        function renderWaliGrid() {
+            const container = document.getElementById('wali-grid');
+            if(!container) return;
+            
+            let html = '';
+            waliSongoData.forEach((wali, idx) => {
+                // Generate color based on index for variety
+                const colors = ['bg-red-50', 'bg-green-50', 'bg-blue-50', 'bg-yellow-50', 'bg-purple-50'];
+                const color = colors[idx % colors.length];
+                const borderColor = color.replace('50', '200');
+
+                html += `
+                <div class="${color} p-4 rounded-xl border border-gray-200 text-center hover:shadow-md transition transform hover:-translate-y-1">
+                    <div class="w-16 h-16 bg-white rounded-full mx-auto flex items-center justify-center shadow-sm mb-3 text-sky-600 text-2xl border-2 border-white">
+                        <i class="fa-solid ${wali.icon}"></i>
+                    </div>
+                    <h4 class="font-bold text-sky-800">${wali.name}</h4>
+                    <p class="text-xs text-slate-500 italic mb-1">${wali.realName}</p>
+                    <span class="inline-block bg-white text-slate-600 text-[10px] px-2 py-1 rounded-full border border-slate-200">
+                        <i class="fa-solid fa-location-dot text-red-400 mr-1"></i> ${wali.area}
+                    </span>
+                </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // --- Map Rendering Engine ---
+        function renderMap() {
+            const container = document.getElementById('map-nodes');
+            container.innerHTML = '';
+
+            gameState.levelsData.forEach((level, index) => {
+                const isLocked = level.status === 'locked';
+                
+                // Styling
+                const bgClass = isLocked ? 'bg-slate-100' : 'bg-white';
+                const borderClass = isLocked ? 'border-slate-300' : 'border-sky-300 border-b-8';
+                const iconColor = isLocked ? 'text-slate-400' : 'text-yellow-500';
+                const animClass = isLocked ? '' : 'hover:scale-105 active:scale-95';
+                
+                let action = '';
+                if(!isLocked) {
+                    if(level.type === 'materi') action = `openModule(${level.id})`;
+                    else if(level.type === 'upload') action = `Maps('upload')`;
+                    else if(level.type === 'quiz') action = `Maps('quiz')`;
+                }
+
+                // Teacher Edit
+                let editBtn = '';
+                if (gameState.isTeacherMode) {
+                    editBtn = `
+                    <button onclick="event.stopPropagation(); editLevel(${level.id})" class="absolute -top-3 -right-3 bg-yellow-400 text-white w-10 h-10 rounded-full shadow hover:bg-yellow-500 z-50 flex items-center justify-center transform transition border-2 border-white">
+                        <i class="fa-solid fa-pencil text-sm text-yellow-900"></i>
+                    </button>`;
+                }
+
+                const html = `
+                <div class="relative flex flex-col items-center justify-center transition duration-300 group ${index % 2 === 0 ? 'md:mt-0' : 'md:mt-32'}">
+                    
+                    <div onclick="${action}" class="w-32 h-32 md:w-40 md:h-40 rounded-full flex flex-col items-center justify-center cursor-pointer relative z-10 transition-all duration-300 ${bgClass} border-4 ${borderClass} shadow-xl ${animClass} ${isLocked ? 'island-locked' : 'animate-float'}">
+                        <i class="fa-solid ${level.icon} text-4xl mb-2 ${iconColor} drop-shadow-sm"></i>
+                        ${editBtn}
+                        ${!isLocked ? '<div class="absolute inset-0 rounded-full border-4 border-white opacity-20"></div>' : ''}
+                    </div>
+                    
+                    <div class="mt-4 text-center bg-white px-5 py-2 rounded-xl shadow-md border border-sky-100 z-20 transform group-hover:-translate-y-1 transition">
+                        <h3 class="font-bold text-base ${isLocked ? 'text-slate-400' : 'text-sky-700'}">${level.title}</h3>
+                        ${isLocked ? '<i class="fa-solid fa-lock text-xs text-slate-300"></i>' : '<div class="text-xs text-green-500 font-bold">Mulai <i class="fa-solid fa-play ml-1"></i></div>'}
+                    </div>
+                    
+                    <!-- Line for mobile -->
+                    ${index < gameState.levelsData.length - 1 ? '<div class="h-12 w-1 border-l-4 border-dotted border-sky-300 md:hidden my-4 opacity-50"></div>' : ''}
+                </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        // --- Module Logic ---
+        function openModule(id) {
+            const data = gameState.levelsData.find(l => l.id === id);
+            document.getElementById('content-title').innerText = data.title;
+            
+            // Set Youtube Iframe
+            // Defaulting to a safe educational video if empty, or using the data provided
+            const videoUrl = data.videoId && data.videoId.includes('http') ? data.videoId : "https://www.youtube.com/embed/dbxK0s6p5W0"; 
+            document.getElementById('youtube-frame').src = videoUrl;
+
+            navigate('content');
+            setTimeout(observeScroll, 300);
+        }
+
+        function finishModule() {
+            addXP(50);
+            alert("Alhamdulillah! 50 XP ditambahkan. Level selanjutnya terbuka!");
+            unlockNextLevel();
+            navigate('map');
+        }
+
+        function submitUpload() {
+            addXP(100);
+            alert("MasyaAllah! Dakwah yang keren. +100 XP!");
+            unlockNextLevel();
+            navigate('map');
+        }
+
+        function answerQuiz(isCorrect) {
+            if(isCorrect) {
+                addXP(30);
+                alert("Benar! Sunan Kalijaga menggunakan budaya lokal. +30 XP");
+                unlockNextLevel();
+                navigate('map');
+            } else {
+                alert("Kurang tepat. Coba ingat-ingat lagi kisah Sunan Kalijaga.");
+            }
+        }
+
+        // --- Game System ---
+        function addXP(amount) {
+            gameState.xp += amount;
+            if(gameState.xp > 100 && gameState.level === 1) gameState.level = 2;
+            if(gameState.xp > 200 && gameState.level === 2) gameState.level = 3;
+            if(gameState.xp > 350 && gameState.level === 3) gameState.level = 4;
+            updateHUD();
+        }
+
+        function unlockNextLevel() {
+            const nextIndex = gameState.levelsData.findIndex(l => l.status === 'locked');
+            if(nextIndex !== -1) {
+                gameState.levelsData[nextIndex].status = 'unlocked';
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('display-xp').innerText = gameState.xp;
+            document.getElementById('display-level').innerText = gameState.level;
+            const maxXP = gameState.level * 100 + 50; 
+            const percentage = Math.min((gameState.xp / maxXP) * 100, 100);
+            document.getElementById('xp-bar').style.width = `${percentage}%`;
+        }
+
+        // --- Teacher Mode ---
+        function toggleTeacherMode() {
+            const pass = prompt("Kode Guru (Default: 1234):");
+            if(pass === '1234') {
+                gameState.isTeacherMode = !gameState.isTeacherMode;
+                const alertBox = document.getElementById('teacher-alert');
+                gameState.isTeacherMode ? alertBox.classList.remove('hidden') : alertBox.classList.add('hidden');
+                if(gameState.currentView === 'map') renderMap();
+            } else if(pass !== null) {
+                alert("Kode salah.");
+            }
+        }
+
+        function editLevel(id) {
+            const level = gameState.levelsData.find(l => l.id === id);
+            const newTitle = prompt("Judul Materi:", level.title);
+            const newVideo = prompt("Link Youtube Embed (contoh: https://www.youtube.com/embed/ID_VIDEO):", level.videoId);
+            
+            if(newTitle) {
+                level.title = newTitle;
+                level.videoId = newVideo;
+                renderMap();
+                alert("Tersimpan!");
+            }
+        }
+
+        // --- Animation Observer ---
+        function observeScroll() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.scrolly-section').forEach(section => {
+                observer.observe(section);
+            });
+        }
+    </script>
+</body>
+</html>
